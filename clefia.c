@@ -680,6 +680,7 @@ int main(int argc, char **argv) {
                             0x89abcdef};
 
   int tamanio = 300*1024*1024;
+  int blockSize = 16;
 
   char *data = (char*)malloc(sizeof(char) * tamanio);
 
@@ -691,11 +692,18 @@ int main(int argc, char **argv) {
   nread = fread(data, sizeof(char), tamanio, f);
   fclose(f);
   printf("Bytes read: %d\n", nread);
+  
+
+  int realSize = nread + blockSize - (nread % blockSize);
+  printf("Bytes read: %d\n", realSize);
+  for (int i = nread; i < realSize; i++) data[i] = 0;
+
+
 
   char *cipher = (char*)malloc(sizeof(char) * tamanio);
 
   printf("Cifrando...\n");
-  clefia_cbc_128_enc(data, cipher, nread, iv_128, key_128);
+  clefia_cbc_128_enc(data, cipher, realSize, iv_128, key_128);
   printf("Cifrado completo\n");
 
   printf("Guardando archivo cifrado %s...\n", argv[2]);
@@ -714,8 +722,10 @@ int main(int argc, char **argv) {
   nread = fread(cipher, sizeof(char), tamanio, f);
   fclose(f);
 
+  realSize = nread + blockSize - (nread % blockSize);
+
   printf("Decifrando...\n");
-  clefia_cbc_128_dec(data, cipher, nread, iv_128, key_128);
+  clefia_cbc_128_dec(data, cipher, realSize, iv_128, key_128);
   printf("Decifrado completo\n");
 
   printf("guardando archivo descifrado %s...\n", argv[2]);
